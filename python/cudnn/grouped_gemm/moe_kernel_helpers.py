@@ -56,6 +56,11 @@ from cutlass.cute.typing import Float32, Int32, BFloat16, AddressSpace
 from cutlass._mlir.dialects import math, nvvm, llvm, vector, arith
 from .moe_persistent_scheduler import MoESchedulerParams
 
+try:
+    from cutlass._mlir.dialects.nvvm import ReductionKind as ReduxKind
+except ImportError:
+    from cutlass._mlir.dialects.nvvm import ReduxKind
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -312,6 +317,7 @@ def atomic_max_float32(
     value_int = llvm.bitcast(T.i32(), value.ir_value(loc=loc, ip=ip), loc=loc, ip=ip)
 
     old_value_int = nvvm.atomicrmw(
+        T.i32(),
         op=cutlass._mlir.dialects.nvvm.AtomicOpKind.MAX,
         ptr=ptr,
         a=value_int,
@@ -331,6 +337,7 @@ def atomic_add_float32(
 ) -> Float32:
     """Atomic FP32 addition in global memory (used for dprob gradient accumulation)."""
     old_value = nvvm.atomicrmw(
+        T.f32(),
         op=AtomicOpKind.FADD,
         ptr=ptr,
         a=value.ir_value(loc=loc, ip=ip),
@@ -1046,8 +1053,6 @@ def quant_sfd_col(
     d_dtype,
     use_fp8_ptx_cvt,
 ):
-    from cutlass._mlir.dialects.nvvm import ReduxKind
-
     tTR_rAcc_frg = cute.logical_divide(src, cute.make_layout(sf_vec_size))
     acc_frg = tTR_rAcc_frg.load()
     abs_acc_frg_ir = cutlass._mlir.dialects.math.absf(acc_frg.ir_value())

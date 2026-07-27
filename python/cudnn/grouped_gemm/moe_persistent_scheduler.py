@@ -60,6 +60,7 @@ def atomic_add_i32(
 ) -> Int32:
     """Perform an atomic add on an int32 value in global memory."""
     old_value = nvvm.atomicrmw(
+        T.i32(),
         op=AtomicOpKind.ADD,
         ptr=ptr,
         a=value.ir_value(loc=loc, ip=ip),

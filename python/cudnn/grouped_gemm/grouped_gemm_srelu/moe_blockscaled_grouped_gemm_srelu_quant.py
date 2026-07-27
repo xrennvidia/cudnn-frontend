@@ -30,7 +30,10 @@ import cutlass.utils as utils
 import cutlass.pipeline as pipeline
 import cutlass.utils.blackwell_helpers as sm100_utils
 import cutlass.utils.blockscaled_layout as blockscaled_utils
-from cutlass._mlir.dialects.nvvm import ReduxKind
+try:
+    from cutlass._mlir.dialects.nvvm import ReductionKind as ReduxKind
+except ImportError:
+    from cutlass._mlir.dialects.nvvm import ReduxKind
 from cutlass.cute.typing import Float32, Int32, AddressSpace
 from ..moe_persistent_scheduler import (
     MoEPersistentTileScheduler,
